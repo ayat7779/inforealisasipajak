@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "440559038230",
+    "project_id": "com-example-infopajak-7c056",
+    "storage_bucket": "com-example-infopajak-7c056.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440559038230:android:03709fbfd16c0b7edd6a37",
+        "android_client_info": {
+          "package_name": "com.example.infopajak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQ0SGGAk6DecngXoS_uMNxLrwp8H2Zlfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
