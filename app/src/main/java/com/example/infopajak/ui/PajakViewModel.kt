@@ -76,6 +76,9 @@ class PajakViewModel : ViewModel() {
     private val _selectedTrendYear = MutableStateFlow(Calendar.getInstance().get(Calendar.YEAR))
     val selectedTrendYear: StateFlow<Int> = _selectedTrendYear.asStateFlow()
 
+    private val _selectedAnalyticCategory = MutableStateFlow<String?>(null) // null means "Total"
+    val selectedAnalyticCategory: StateFlow<String?> = _selectedAnalyticCategory.asStateFlow()
+
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     private val apiService: PajakApiService by lazy {
@@ -116,6 +119,11 @@ class PajakViewModel : ViewModel() {
         fetchDailyTrend(_selectedTrendMonth.value, year)
     }
 
+    fun selectAnalyticCategory(category: String?) {
+        _selectedAnalyticCategory.value = category
+        fetchAnalyticTrend()
+    }
+
     private fun fetchAnalyticTrend() {
         fetchDailyTrend(_selectedTrendMonth.value, _selectedTrendYear.value)
         fetchMonthlyTrend(_selectedTrendYear.value)
@@ -145,12 +153,22 @@ class PajakViewModel : ViewModel() {
                             val dateStr = String.format(Locale.getDefault(), "%d-%02d-%02d", year, month + 1, day)
                             val request = PajakRequest(getApiKeyForYear(year), dateStr, dateStr)
                             val response = apiService.getPajakData(request)
-                            val total = (response.data?.pkb ?: 0L) + 
-                                       (response.data?.bbnkb ?: 0L) + 
-                                       (response.data?.ap ?: 0L) + 
-                                       (response.data?.pbbkb?.toLongOrNull() ?: 0L) + 
-                                       (response.data?.pajakRokok?.toLongOrNull() ?: 0L) + 
-                                       (response.data?.ab ?: 0L)
+                            val total = when (_selectedAnalyticCategory.value) {
+                                "PKB" -> response.data?.pkb ?: 0L
+                                "BBNKB" -> response.data?.bbnkb ?: 0L
+                                "PAP" -> response.data?.ap ?: 0L
+                                "PBBKB" -> response.data?.pbbkb?.toLongOrNull() ?: 0L
+                                "Pajak Rokok" -> response.data?.pajakRokok?.toLongOrNull() ?: 0L
+                                "AB" -> response.data?.ab ?: 0L
+                                else -> {
+                                    (response.data?.pkb ?: 0L) +
+                                    (response.data?.bbnkb ?: 0L) +
+                                    (response.data?.ap ?: 0L) +
+                                    (response.data?.pbbkb?.toLongOrNull() ?: 0L) +
+                                    (response.data?.pajakRokok?.toLongOrNull() ?: 0L) +
+                                    (response.data?.ab ?: 0L)
+                                }
+                            }
                             TrendData(day.toString(), total)
                         } catch (e: Exception) {
                             TrendData(day.toString(), 0L)
@@ -193,12 +211,22 @@ class PajakViewModel : ViewModel() {
                             
                             val request = PajakRequest(getApiKeyForYear(year), start, end)
                             val response = apiService.getPajakData(request)
-                            val total = (response.data?.pkb ?: 0L) + 
-                                       (response.data?.bbnkb ?: 0L) + 
-                                       (response.data?.ap ?: 0L) + 
-                                       (response.data?.pbbkb?.toLongOrNull() ?: 0L) + 
-                                       (response.data?.pajakRokok?.toLongOrNull() ?: 0L) + 
-                                       (response.data?.ab ?: 0L)
+                            val total = when (_selectedAnalyticCategory.value) {
+                                "PKB" -> response.data?.pkb ?: 0L
+                                "BBNKB" -> response.data?.bbnkb ?: 0L
+                                "PAP" -> response.data?.ap ?: 0L
+                                "PBBKB" -> response.data?.pbbkb?.toLongOrNull() ?: 0L
+                                "Pajak Rokok" -> response.data?.pajakRokok?.toLongOrNull() ?: 0L
+                                "AB" -> response.data?.ab ?: 0L
+                                else -> {
+                                    (response.data?.pkb ?: 0L) +
+                                    (response.data?.bbnkb ?: 0L) +
+                                    (response.data?.ap ?: 0L) +
+                                    (response.data?.pbbkb?.toLongOrNull() ?: 0L) +
+                                    (response.data?.pajakRokok?.toLongOrNull() ?: 0L) +
+                                    (response.data?.ab ?: 0L)
+                                }
+                            }
                             TrendData(monthsList[monthIdx], total)
                         } catch (e: Exception) {
                             TrendData(monthsList[monthIdx], 0L)
@@ -229,14 +257,14 @@ class PajakViewModel : ViewModel() {
     }
 
     private fun fetchTriwulanData(category: String) {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR).toString()
+        val selectedYear = try { _startDate.value.split("-")[0] } catch (e: Exception) { Calendar.getInstance().get(Calendar.YEAR).toString() }
+        val yearInt = selectedYear.toInt()
         
         val quarters = listOf(
-            Triple("TW-1", "$year-01-01", "$year-03-31"),
-            Triple("TW-2", "$year-04-01", "$year-06-30"),
-            Triple("TW-3", "$year-07-01", "$year-09-30"),
-            Triple("TW-4", "$year-10-01", "$year-12-31")
+            Triple("TW-1", "$selectedYear-01-01", "$selectedYear-03-31"),
+            Triple("TW-2", "$selectedYear-04-01", "$selectedYear-06-30"),
+            Triple("TW-3", "$selectedYear-07-01", "$selectedYear-09-30"),
+            Triple("TW-4", "$selectedYear-10-01", "$selectedYear-12-31")
         )
 
         viewModelScope.launch {
@@ -245,7 +273,7 @@ class PajakViewModel : ViewModel() {
                 val results = quarters.map { (label, start, end) ->
                     async {
                         try {
-                            val request = PajakRequest(getApiKeyForYear(Calendar.getInstance().get(Calendar.YEAR)), start, end)
+                            val request = PajakRequest(getApiKeyForYear(yearInt), start, end)
                             val response = apiService.getPajakData(request)
                             val realization = when (category) {
                                 "PKB" -> response.data?.pkb ?: 0L
@@ -291,8 +319,9 @@ class PajakViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = PajakUiState.Loading
             try {
+                val year = try { start.split("-")[0].toInt() } catch (e: Exception) { Calendar.getInstance().get(Calendar.YEAR) }
                 val request = PajakRequest(
-                    apiKey = getApiKeyForYear(Calendar.getInstance().get(Calendar.YEAR)),
+                    apiKey = getApiKeyForYear(year),
                     tglAwal = start,
                     tglAkhir = end
                 )
@@ -313,6 +342,12 @@ class PajakViewModel : ViewModel() {
     fun getStartOfMonthDate(): String {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1)
+        return dateFormat.format(calendar.time)
+    }
+
+    fun getStartOfYearDate(): String {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_YEAR, 1)
         return dateFormat.format(calendar.time)
     }
 }

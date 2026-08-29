@@ -140,11 +140,16 @@ fun PajakScreen(
                             viewModel.setDateRangeAndFetch(today, today)
                         },
                         onMonthClick = {
-                            val start = viewModel.getStartOfMonthDate()
-                            val today = viewModel.getTodayDate()
-                            viewModel.setDateRangeAndFetch(start, today)
-                        },
-                        onCustomRangeClick = {
+                    val start = viewModel.getStartOfMonthDate()
+                    val today = viewModel.getTodayDate()
+                    viewModel.setDateRangeAndFetch(start, today)
+                },
+                onYearClick = {
+                    val start = viewModel.getStartOfYearDate()
+                    val today = viewModel.getTodayDate()
+                    viewModel.setDateRangeAndFetch(start, today)
+                },
+                onCustomRangeClick = {
                             showDatePicker(startDate) { newStart ->
                                 showDatePicker(endDate) { newEnd ->
                                     viewModel.setDateRangeAndFetch(newStart, newEnd)
@@ -193,9 +198,11 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
     
     val selectedMonth by viewModel.selectedTrendMonth.collectAsState()
     val selectedYear by viewModel.selectedTrendYear.collectAsState()
+    val selectedCategory by viewModel.selectedAnalyticCategory.collectAsState()
 
     val months = listOf("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
     val years = (2024..2026).map { it.toString() }
+    val categories = listOf("Total", "PKB", "BBNKB", "PAP", "PBBKB", "Pajak Rokok", "AB")
 
     Column(
         modifier = Modifier
@@ -214,8 +221,57 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
             }
         }
 
+        // Category Selector
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Filter Kategori", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var expanded by remember { mutableStateOf(false) }
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedCategory ?: "Total", style = MaterialTheme.typography.bodyMedium)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            }
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category) },
+                                    onClick = {
+                                        viewModel.selectAnalyticCategory(if (category == "Total") null else category)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Daily Trend Section
-        Text("Tren Harian (Total Realisasi)", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Tren Harian (${selectedCategory ?: "Total Realisasi"})", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -270,7 +326,7 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
         HorizontalDivider()
 
         // Monthly Trend Section
-        Text("Tren Bulanan Tahun $selectedYear", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Tren Bulanan ${selectedCategory ?: "Total"} Tahun $selectedYear", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Pilih Tahun: ", style = MaterialTheme.typography.bodyMedium)
             var expanded by remember { mutableStateOf(false) }
@@ -291,14 +347,22 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
                 }
             }
         }
-        TrendChart(data = monthlyTrend, isMonthly = true)
+        TrendChart(data = monthlyTrend, isMonthly = true, chartType = ChartType.LINE, barColor = Color(0xFFFA8072))
         
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
+enum class ChartType { BAR, LINE }
+
 @Composable
-fun TrendChart(data: List<TrendData>, isMonthly: Boolean = false, labelPrefix: String = "") {
+fun TrendChart(
+    data: List<TrendData>,
+    isMonthly: Boolean = false,
+    labelPrefix: String = "",
+    barColor: Color = Color(0xFF6200EE),
+    chartType: ChartType = ChartType.BAR
+) {
     if (data.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
             Text("Memuat data...")
@@ -336,8 +400,8 @@ fun TrendChart(data: List<TrendData>, isMonthly: Boolean = false, labelPrefix: S
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                val barColor = Color(0xFF6200EE)
-                val selectedBarColor = MaterialTheme.colorScheme.secondary
+                val primaryColor = barColor
+                val selectedColor = MaterialTheme.colorScheme.secondary
                 val gridColor = Color.LightGray.copy(alpha = 0.5f)
                 
                 Canvas(
@@ -353,7 +417,6 @@ fun TrendChart(data: List<TrendData>, isMonthly: Boolean = false, labelPrefix: S
                 ) {
                     val canvasWidth = size.width
                     val canvasHeight = size.height - 30.dp.toPx()
-                    val barWidth = (canvasWidth / data.size) * 0.7f
                     val spacing = canvasWidth / data.size
 
                     // Draw Dashed Helper Lines (Horizontal Grid)
@@ -369,22 +432,54 @@ fun TrendChart(data: List<TrendData>, isMonthly: Boolean = false, labelPrefix: S
                         )
                     }
 
+                    if (chartType == ChartType.BAR) {
+                        val barWidth = spacing * 0.7f
+                        data.forEachIndexed { index, trend ->
+                            val barHeight = (trend.value.toDouble() / maxVal.toDouble() * canvasHeight).toFloat()
+                            val x = index * spacing + (spacing - barWidth) / 2
+                            val y = canvasHeight - barHeight
+
+                            drawRect(
+                                color = if (index == selectedIndex) selectedColor else primaryColor,
+                                topLeft = Offset(x, y),
+                                size = Size(barWidth, barHeight)
+                            )
+                        }
+                    } else {
+                        // Line Chart
+                        val points = data.mapIndexed { index, trend ->
+                            val x = index * spacing + spacing / 2
+                            val y = (canvasHeight - (trend.value.toDouble() / maxVal.toDouble() * canvasHeight)).toFloat()
+                            Offset(x, y)
+                        }
+
+                        // Draw Line Path
+                        for (i in 0 until points.size - 1) {
+                            drawLine(
+                                color = primaryColor,
+                                start = points[i],
+                                end = points[i + 1],
+                                strokeWidth = 3.dp.toPx()
+                            )
+                        }
+
+                        // Draw Points
+                        points.forEachIndexed { index, point ->
+                            drawCircle(
+                                color = if (index == selectedIndex) selectedColor else primaryColor,
+                                radius = if (index == selectedIndex) 6.dp.toPx() else 4.dp.toPx(),
+                                center = point
+                            )
+                        }
+                    }
+
+                    // Labels
                     data.forEachIndexed { index, trend ->
-                        val barHeight = (trend.value.toDouble() / maxVal.toDouble() * canvasHeight).toFloat()
-                        val x = index * spacing + (spacing - barWidth) / 2
-                        val y = canvasHeight - barHeight
-
-                        drawRect(
-                            color = if (index == selectedIndex) selectedBarColor else barColor,
-                            topLeft = Offset(x, y),
-                            size = Size(barWidth, barHeight)
-                        )
-
-                        // Labels
                         if (isMonthly || index % 5 == 0 || index == data.size - 1) {
+                            val x = index * spacing + spacing / 2
                             drawContext.canvas.nativeCanvas.drawText(
                                 "$labelPrefix${trend.label}",
-                                x + barWidth / 2,
+                                x,
                                 size.height - 5.dp.toPx(),
                                 android.graphics.Paint().apply {
                                     color = android.graphics.Color.GRAY
@@ -481,6 +576,7 @@ fun ErrorState(message: String, onRetry: () -> Unit) {
 fun DateSelectionBar(
     onTodayClick: () -> Unit,
     onMonthClick: () -> Unit,
+    onYearClick: () -> Unit,
     onCustomRangeClick: () -> Unit
 ) {
     Row(
@@ -502,6 +598,13 @@ fun DateSelectionBar(
             contentPadding = PaddingValues(horizontal = 4.dp)
         ) {
             Text("Bulan Ini", style = MaterialTheme.typography.labelSmall)
+        }
+        Button(
+            onClick = onYearClick,
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 4.dp)
+        ) {
+            Text("Tahun Ini", style = MaterialTheme.typography.labelSmall)
         }
         OutlinedButton(
             onClick = onCustomRangeClick,
@@ -575,13 +678,77 @@ fun TriwulanDetailContent(category: String, dataList: List<TriwulanData>) {
         )
         
         dataList.forEachIndexed { index, item ->
-            TriwulanCard(item, index + 1)
+            val thresholdText = when (category) {
+                "PKB" -> when (index) {
+                    0 -> "Target Pencapaian Target adalah 20%"
+                    1 -> "Akumulasi Pencapaian Target adalah 45%"
+                    2 -> "Akumulasi Pencapaian Target adalah 85%"
+                    3 -> "Akumulasi Pencapaian Target adalah 100%"
+                    else -> ""
+                }
+                "BBNKB" -> when (index) {
+                    0 -> "Target Pencapaian Target adalah 20%"
+                    1 -> "Akumulasi Pencapaian Target adalah 45%"
+                    2 -> "Akumulasi Pencapaian Target adalah 75%"
+                    3 -> "Akumulasi Pencapaian Target adalah 100%"
+                    else -> ""
+                }
+                "PAP" -> when (index) {
+                    0 -> "Target Pencapaian Target adalah 15%"
+                    1 -> "Akumulasi Pencapaian Target adalah 45%"
+                    2 -> "Akumulasi Pencapaian Target adalah 70%"
+                    3 -> "Akumulasi Pencapaian Target adalah 100%"
+                    else -> ""
+                }
+                "PBBKB" -> when (index) {
+                    0 -> "Target Pencapaian Target adalah 20%"
+                    1 -> "Akumulasi Pencapaian Target adalah 40%"
+                    2 -> "Akumulasi Pencapaian Target adalah 70%"
+                    3 -> "Akumulasi Pencapaian Target adalah 100%"
+                    else -> ""
+                }
+                else -> ""
+            }
+            TriwulanCard(item, index + 1, thresholdText)
         }
     }
 }
 
 @Composable
-fun TriwulanCard(item: TriwulanData, index: Int) {
+fun TargetAnalysisCard(isAchieved: Boolean, note: String, percentage: Double) {
+    val percentageText = String.format(Locale.getDefault(), "%.2f%%", percentage)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isAchieved) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (isAchieved) Color(0xFF2E7D32) else Color(0xFFC62828)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (isAchieved) Icons.Default.CheckCircle else Icons.Default.Error,
+                contentDescription = null,
+                tint = if (isAchieved) Color(0xFF2E7D32) else Color(0xFFC62828)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "$percentageText - $note",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isAchieved) Color(0xFF2E7D32) else Color(0xFFC62828)
+            )
+        }
+    }
+}
+
+@Composable
+fun TriwulanCard(item: TriwulanData, index: Int, thresholdText: String = "") {
     val targetVal = item.target?.toLongOrNull() ?: 0L
     val percentage = if (targetVal > 0) (item.realization.toDouble() / targetVal.toDouble()) else 0.0
     val percentageText = String.format(Locale.getDefault(), "%.2f%%", percentage * 100)
@@ -652,6 +819,16 @@ fun TriwulanCard(item: TriwulanData, index: Int) {
                     text = formatNumber(item.realization.toString()),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (thresholdText.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = thresholdText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -750,7 +927,8 @@ fun PajakCard(title: String, target: String?, realization: String?, icon: ImageV
     val targetVal = target?.toLongOrNull() ?: 0L
     val realizationVal = realization?.toLongOrNull() ?: 0L
     val percentage = if (targetVal > 0) (realizationVal.toDouble() / targetVal.toDouble()) else 0.0
-    val percentageText = String.format(Locale.getDefault(), "%.2f%%", percentage * 100)
+    val percentage100 = percentage * 100
+    val percentageText = String.format(Locale.getDefault(), "%.2f%%", percentage100)
 
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
@@ -776,7 +954,7 @@ fun PajakCard(title: String, target: String?, realization: String?, icon: ImageV
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black // Ensuring legibility on colored cards
+                        color = Color.Black
                     )
                 }
                 Text(
@@ -816,7 +994,56 @@ fun PajakCard(title: String, target: String?, realization: String?, icon: ImageV
                     color = Color.Black
                 )
             }
+
+            // Achievement Note integrated into Beranda Card
+            getAchievementData(title, percentage100)?.let { (isAchieved, note) ->
+                Spacer(modifier = Modifier.height(12.dp))
+                Surface(
+                    color = if (isAchieved) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isAchieved) Icons.Default.CheckCircle else Icons.Default.Error,
+                            contentDescription = null,
+                            tint = if (isAchieved) Color(0xFF2E7D32) else Color(0xFFC62828),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = note,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isAchieved) Color(0xFF2E7D32) else Color(0xFFC62828)
+                        )
+                    }
+                }
+            }
         }
+    }
+}
+
+private fun getAchievementData(category: String, percentage: Double): Pair<Boolean, String>? {
+    val tw1Threshold = if (category == "PAP") 15.0 else 20.0
+    val tw2Threshold = if (category == "PBBKB") 40.0 else 45.0
+    val tw3Threshold = when (category) {
+        "PKB" -> 85.0
+        "BBNKB" -> 75.0
+        "PAP" -> 70.0
+        "PBBKB" -> 70.0
+        else -> return null
+    }
+
+    return when {
+        percentage >= 100.0 -> true to "Telah Tercapai Target Triwulan IV"
+        percentage >= tw3Threshold -> true to "Telah Tercapai Target Triwulan III"
+        percentage >= tw2Threshold -> true to "Telah Tercapai Target Triwulan II"
+        percentage >= tw1Threshold -> true to "Telah Tercapai Target Triwulan I"
+        else -> false to "Belum Tercapai Target"
     }
 }
 

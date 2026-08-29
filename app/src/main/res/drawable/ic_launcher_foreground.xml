@@ -1,30 +1,78 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Base Podium -->
     <path
-        android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
+        android:pathData="M20,85 L80,85 L80,95 L20,95 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Main Body Sections (from bottom up, nested) -->
+
+    <!-- Level 1 (Bottom) -->
+    <path
+        android:pathData="M25,65 L75,65 L75,85 L25,85 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Level 2 -->
+    <path
+        android:pathData="M30,55 L70,55 L70,65 L30,65 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Level 3 -->
+    <path
+        android:pathData="M35,45 L65,45 L65,55 L35,55 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Level 4 -->
+    <path
+        android:pathData="M40,35 L60,35 L60,45 L40,45 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Level 5 -->
+    <path
+        android:pathData="M45,25 L55,25 L55,35 L45,35 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Top Spire -->
+    <path
+        android:pathData="M48,15 L52,15 L52,25 L48,25 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Very Top Antenna -->
+    <path
+        android:pathData="M50,10 L50,15 Z"
+        android:strokeColor="#FFFFFF"
         android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:strokeLineCap="round"/>
+
+    <!-- Windows (Simplified grid for the central tower) -->
+
+    <!-- Windows Level 1 (Lowest) -->
+    <path
+        android:pathData="M28,68 L32,68 L32,82 L28,82 Z M36,68 L40,68 L40,82 L36,82 Z M44,68 L48,68 L48,82 L44,82 Z M52,68 L56,68 L56,82 L52,82 Z M60,68 L64,68 L64,82 L60,82 Z M68,68 L72,68 L72,82 L68,82 Z"
+        android:fillColor="#000000"/>
+
+    <!-- Windows Level 2 -->
+    <path
+        android:pathData="M33,58 L37,58 L37,62 L33,62 Z M43,58 L47,58 L47,62 L43,62 Z M53,58 L57,58 L57,62 L53,62 Z M63,58 L67,58 L67,62 L63,62 Z"
+        android:fillColor="#000000"/>
+
+    <!-- Windows Level 3 -->
+    <path
+        android:pathData="M38,48 L42,48 L42,52 L38,52 Z M48,48 L52,48 L52,52 L48,52 Z M58,48 L62,48 L62,52 L58,52 Z"
+        android:fillColor="#000000"/>
+
+    <!-- Windows Level 4 -->
+    <path
+        android:pathData="M43,38 L47,38 L47,42 L43,42 Z M53,38 L57,38 L57,42 L53,42 Z"
+        android:fillColor="#000000"/>
+
+    <!-- Windows Level 5 (Top body section) -->
+    <path
+        android:pathData="M48,28 L52,28 L52,32 L48,32 Z"
+        android:fillColor="#000000"/>
+
 </vector>
