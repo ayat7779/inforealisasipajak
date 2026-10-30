@@ -367,7 +367,7 @@ fun DashboardLandingContent(
                 accentColor = Color(0xFF0288D1),
                 gradient = Brush.linearGradient(listOf(Color(0xFFE1F5FE), Color(0xFFB3E5FC))),
                 statusText = topPerformer?.let { formatNumber(it.third) } ?: "-",
-                description = "Mata Pajak Tertinggi"
+                description = "Realisasi Tertinggi"
             )
             LandingKpiCard(
                 modifier = Modifier.weight(1f),
@@ -376,8 +376,8 @@ fun DashboardLandingContent(
                 icon = Icons.AutoMirrored.Filled.FactCheck,
                 accentColor = Color(0xFF7B1FA2),
                 gradient = Brush.linearGradient(listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7))),
-                statusText = lowestPerformer?.let { "${it.first.title}: ${String.format(Locale.getDefault(), "%.1f%%", it.second)}" } ?: "-",
-                description = "Capaian Target Penuh"
+                statusText = lowestPerformer?.let { "${it.first.title} ${String.format(Locale.getDefault(), "%.1f%%", it.second)}" } ?: "-",
+                description = "Capaian Terendah"
             )
         }
 
@@ -559,18 +559,16 @@ fun LandingKpiCard(
 
             HorizontalDivider(color = accentColor.copy(alpha = 0.25f), thickness = 1.dp)
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     text = statusText,
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                     fontWeight = FontWeight.Bold,
                     color = TextDark,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f, fill = false)
+                    maxLines = 1
                 )
                 Text(
                     text = description,
