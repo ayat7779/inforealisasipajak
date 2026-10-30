@@ -2,9 +2,11 @@ package com.example.infopajak.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -17,15 +19,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.infopajak.R
 import com.example.infopajak.data.PajakData
+import com.example.infopajak.ui.theme.*
 import java.util.*
 import kotlin.math.abs
 
@@ -42,18 +44,18 @@ fun DashboardLandingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(BackgroundLight)
     ) {
         when (val state = uiState) {
             is PajakUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        CircularProgressIndicator(color = PrimaryBlue)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Memuat Dashboard KPI Realisasi...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = TextMuted
                         )
                     }
                 }
@@ -87,12 +89,12 @@ fun DashboardLandingContent(
     onRefresh: () -> Unit
 ) {
     val items = listOf(
-        PajakItem("PKB", data.targetPkb, data.pkb?.toString(), Icons.Default.DirectionsCar, Color(0xFFE3F2FD)),
-        PajakItem("BBNKB", data.targetBbnkb, data.bbnkb?.toString(), Icons.Default.SyncAlt, Color(0xFFE8F5E9)),
-        PajakItem("PAP", data.targetAp, data.ap?.toString(), Icons.Default.WaterDrop, Color(0xFFE0F7FA)),
-        PajakItem("PBBKB", data.targetPbbkb, data.pbbkb, Icons.Default.LocalGasStation, Color(0xFFFFF8E1)),
-        PajakItem("Pajak Rokok", data.targetPajakRokok, data.pajakRokok, Icons.Default.SmokingRooms, Color(0xFFFFEBEE)),
-        PajakItem("AB", data.targetAb, data.ab?.toString(), Icons.Default.Waves, Color(0xFFF3E5F5))
+        PajakItem("PKB", data.targetPkb, data.pkb?.toString(), Icons.Default.DirectionsCar, PkbLight, PkbColor, PkbGradient),
+        PajakItem("BBNKB", data.targetBbnkb, data.bbnkb?.toString(), Icons.Default.SyncAlt, BbnkbLight, BbnkbColor, BbnkbGradient),
+        PajakItem("PAP", data.targetAp, data.ap?.toString(), Icons.Default.WaterDrop, PapLight, PapColor, PapGradient),
+        PajakItem("PBBKB", data.targetPbbkb, data.pbbkb, Icons.Default.LocalGasStation, PbbkbLight, PbbkbColor, PbbkbGradient),
+        PajakItem("Pajak Rokok", data.targetPajakRokok, data.pajakRokok, Icons.Default.SmokingRooms, RokokLight, RokokColor, RokokGradient),
+        PajakItem("AB", data.targetAb, data.ab?.toString(), Icons.Default.Waves, AbLight, AbColor, AbGradient)
     )
 
     var totalTarget = 0L
@@ -124,21 +126,23 @@ fun DashboardLandingContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Hero Header Card
+        // Hero Header Card - Royal Executive Blue Gradient
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(elevation = 8.dp, shape = RoundedCornerShape(20.dp), spotColor = PrimaryDarkBlue.copy(alpha = 0.4f)),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                                MaterialTheme.colorScheme.primary
+                        Brush.linearGradient(
+                            listOf(
+                                Color(0xFF0A2540),
+                                Color(0xFF1565C0),
+                                Color(0xFF1E88E5)
                             )
                         )
                     )
@@ -150,14 +154,20 @@ fun DashboardLandingContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(
-                            text = "DASHBOARD EKSEKUTIF",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = 0.8f),
-                            letterSpacing = 1.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Surface(
+                            color = Color(0xFFFFB300),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = "DASHBOARD EKSEKUTIF",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF0F172A),
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "Info Realisasi Pajak Daerah",
                             style = MaterialTheme.typography.titleLarge,
@@ -165,7 +175,7 @@ fun DashboardLandingContent(
                             color = Color.White
                         )
                         Text(
-                            text = "Bapenda Provinsi Riau",
+                            text = "Badan Pendapatan Daerah Provinsi Riau",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.85f)
                         )
@@ -173,7 +183,10 @@ fun DashboardLandingContent(
 
                     IconButton(
                         onClick = onRefresh,
-                        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.White.copy(alpha = 0.15f),
+                            contentColor = Color.White
+                        )
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh Data")
                     }
@@ -183,8 +196,8 @@ fun DashboardLandingContent(
 
                 // Date badge
                 Surface(
-                    color = Color.White.copy(alpha = 0.2f),
-                    shape = MaterialTheme.shapes.small
+                    color = Color.White.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -194,14 +207,14 @@ fun DashboardLandingContent(
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = Color(0xFFFFD54F),
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = "Periode: $startDate s/d $endDate",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -229,29 +242,29 @@ fun DashboardLandingContent(
                     }
 
                     Surface(
-                        color = if (totalPercentage >= 100.0) Color(0xFF2E7D32) else Color.White.copy(alpha = 0.25f),
-                        shape = MaterialTheme.shapes.medium
+                        color = if (totalPercentage >= 100.0) Color(0xFF2E7D32) else Color(0xFFFF8F00),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = if (totalPercentage >= 100.0) "TARGET TERCAPAI" else "DALAM PROSES",
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
                             color = Color.White
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 LinearProgressIndicator(
                     progress = { (totalPercentage / 100.0).coerceIn(0.0, 1.0).toFloat() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(10.dp)
-                        .clip(MaterialTheme.shapes.small),
+                        .clip(RoundedCornerShape(5.dp)),
                     color = Color(0xFFFFD54F),
-                    trackColor = Color.White.copy(alpha = 0.3f)
+                    trackColor = Color.White.copy(alpha = 0.25f)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -291,14 +304,25 @@ fun DashboardLandingContent(
         }
 
         // Section Title
-        Text(
-            text = "Indikator Kinerja Utama (KPI)",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(20.dp)
+                    .background(PrimaryBlue, RoundedCornerShape(2.dp))
+            )
+            Text(
+                text = "Indikator Kinerja Utama (KPI)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+        }
 
-        // 4 KPI Cards Grid
+        // 4 KPI Cards Grid with Distinct Gradients
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -308,7 +332,11 @@ fun DashboardLandingContent(
                 title = "Efektivitas Capaian",
                 value = String.format(Locale.getDefault(), "%.2f%%", totalPercentage),
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
-                accentColor = if (totalPercentage >= 100.0) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary,
+                accentColor = if (totalPercentage >= 100.0) Color(0xFF2E7D32) else PrimaryBlue,
+                gradient = Brush.linearGradient(
+                    if (totalPercentage >= 100.0) listOf(Color(0xFFE8F5E9), Color(0xFFC8E6C9))
+                    else listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB))
+                ),
                 statusText = if (totalPercentage >= 100.0) "Sangat Efektif" else "Berprogres Positif",
                 description = "Realisasi vs Target"
             )
@@ -318,6 +346,10 @@ fun DashboardLandingContent(
                 value = formatNumber(abs(totalGap)),
                 icon = if (totalGap <= 0) Icons.Default.CheckCircle else Icons.Default.PieChart,
                 accentColor = if (totalGap <= 0) Color(0xFF2E7D32) else Color(0xFFE65100),
+                gradient = Brush.linearGradient(
+                    if (totalGap <= 0) listOf(Color(0xFFE8F5E9), Color(0xFFA5D6A7))
+                    else listOf(Color(0xFFFFF3E0), Color(0xFFFFE0B2))
+                ),
                 statusText = if (totalGap <= 0) "Melampaui Target" else "Perlu Dikejar",
                 description = if (totalGap <= 0) "Surplus Anggaran" else "Kekurangan Penerimaan"
             )
@@ -332,7 +364,8 @@ fun DashboardLandingContent(
                 title = "Kinerja Terbaik",
                 value = topPerformer?.let { "${it.first.title} (${String.format(Locale.getDefault(), "%.1f%%", it.second)})" } ?: "-",
                 icon = Icons.Default.Stars,
-                accentColor = Color(0xFF1976D2),
+                accentColor = Color(0xFF0288D1),
+                gradient = Brush.linearGradient(listOf(Color(0xFFE1F5FE), Color(0xFFB3E5FC))),
                 statusText = topPerformer?.let { formatNumber(it.third) } ?: "-",
                 description = "Mata Pajak Tertinggi"
             )
@@ -342,6 +375,7 @@ fun DashboardLandingContent(
                 value = "$achievedCount / ${items.size} Pajak",
                 icon = Icons.AutoMirrored.Filled.FactCheck,
                 accentColor = Color(0xFF7B1FA2),
+                gradient = Brush.linearGradient(listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7))),
                 statusText = lowestPerformer?.let { "${it.first.title}: ${String.format(Locale.getDefault(), "%.1f%%", it.second)}" } ?: "-",
                 description = "Capaian Target Penuh"
             )
@@ -349,8 +383,11 @@ fun DashboardLandingContent(
 
         // Quick Navigation to Details / Analytics Card
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color(0xFF94A3B8)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
@@ -361,23 +398,25 @@ fun DashboardLandingContent(
                     Text(
                         text = "Ringkasan Per Mata Pajak",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
                     )
                     TextButton(onClick = { onNavigateToDetails(null) }) {
-                        Text("Lihat Semua")
+                        Text("Lihat Semua", color = PrimaryBlue, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp), tint = PrimaryBlue)
                     }
                 }
 
-                // Mini preview cards of top 3 pajak
+                // Mini preview cards of top 3 pajak with colored gradient accents
                 performanceList.take(3).forEach { (item, pct, realVal) ->
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onNavigateToDetails(item.title) },
-                        shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.surface
+                            .clickable { onNavigateToDetails(item.title) }
+                            .border(1.dp, item.accentColor.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
+                        shape = RoundedCornerShape(12.dp),
+                        color = item.color.copy(alpha = 0.5f)
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -386,22 +425,22 @@ fun DashboardLandingContent(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
-                                        .background(item.color, shape = MaterialTheme.shapes.small),
+                                        .size(40.dp)
+                                        .background(item.gradient, shape = RoundedCornerShape(10.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(item.icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Black)
+                                    Icon(item.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White)
                                 }
                                 Column {
-                                    Text(item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                    Text(item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextDark)
                                     Text(
                                         formatNumber(realVal),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = TextMuted
                                     )
                                 }
                             }
@@ -411,12 +450,12 @@ fun DashboardLandingContent(
                                     text = String.format(Locale.getDefault(), "%.2f%%", pct),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (pct >= 100.0) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary
+                                    color = if (pct >= 100.0) Color(0xFF2E7D32) else item.accentColor
                                 )
                                 Text(
                                     text = if (pct >= 100.0) "Tercapai" else "Proses",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.outline
+                                    color = TextMuted
                                 )
                             }
                         }
@@ -425,28 +464,36 @@ fun DashboardLandingContent(
             }
         }
 
-        // Action Buttons Row
+        // Action Buttons Row with Gradient Highlights
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Button(
                 onClick = { onNavigateToDetails(null) },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
             ) {
-                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Buka Rincian")
+                Text("Buka Rincian", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
             OutlinedButton(
                 onClick = onNavigateToAnalytics,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, Brush.horizontalGradient(listOf(Color(0xFF7B1FA2), Color(0xFFE65100)))),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = SurfaceWhite)
             ) {
-                Icon(Icons.Default.Analytics, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Analytics, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFF7B1FA2))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Analisis Tren")
+                Text("Analisis Tren", color = Color(0xFF7B1FA2), fontWeight = FontWeight.Bold)
             }
         }
 
@@ -461,17 +508,19 @@ fun LandingKpiCard(
     value: String,
     icon: ImageVector,
     accentColor: Color,
+    gradient: Brush,
     statusText: String,
     description: String
 ) {
     Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = MaterialTheme.shapes.medium
+        modifier = modifier.shadow(3.dp, RoundedCornerShape(14.dp), spotColor = accentColor.copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier
+                .background(gradient)
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Row(
@@ -481,7 +530,7 @@ fun LandingKpiCard(
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .background(accentColor.copy(alpha = 0.12f), shape = MaterialTheme.shapes.small),
+                        .background(accentColor.copy(alpha = 0.18f), shape = RoundedCornerShape(6.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -494,7 +543,8 @@ fun LandingKpiCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = TextDark,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
             }
@@ -507,7 +557,7 @@ fun LandingKpiCard(
                 maxLines = 1
             )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), thickness = 0.5.dp)
+            HorizontalDivider(color = accentColor.copy(alpha = 0.25f), thickness = 1.dp)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -517,15 +567,15 @@ fun LandingKpiCard(
                 Text(
                     text = statusText,
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark,
                     maxLines = 1,
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                    color = MaterialTheme.colorScheme.outline,
+                    color = TextMuted,
                     maxLines = 1
                 )
             }

@@ -3,10 +3,13 @@ package com.example.infopajak.ui
 import android.app.DatePickerDialog
 import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,8 +21,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.nativeCanvas
@@ -31,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.infopajak.data.PajakData
+import com.example.infopajak.ui.theme.*
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -71,67 +78,102 @@ fun PajakScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = when {
-                                selectedCategory != null -> "Rincian $selectedCategory"
-                                activeTab == 0 -> "Dashboard KPI Realisasi"
-                                activeTab == 1 -> "Realisasi Penerimaan Daerah"
-                                else -> "Dashboard Analitik"
-                            },
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        if (selectedCategory == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TopBarGradient)
+                    .statusBarsPadding()
+            ) {
+                TopAppBar(
+                    title = {
+                        Column {
                             Text(
-                                text = "$startDate s/d $endDate",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                text = when {
+                                    selectedCategory != null -> "Rincian $selectedCategory"
+                                    activeTab == 0 -> "Dashboard KPI Realisasi"
+                                    activeTab == 1 -> "Realisasi Penerimaan Daerah"
+                                    else -> "Dashboard Analitik"
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
+                            if (selectedCategory == null) {
+                                Text(
+                                    text = "$startDate s/d $endDate",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFFFFD54F)
+                                )
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        if (selectedCategory != null) {
+                            IconButton(onClick = { viewModel.selectCategory(null) }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        actionIconContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    ),
+                    actions = {
+                        if (selectedCategory == null) {
+                            IconButton(onClick = { viewModel.fetchData() }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.White)
+                            }
                         }
                     }
-                },
-                navigationIcon = {
-                    if (selectedCategory != null) {
-                        IconButton(onClick = { viewModel.selectCategory(null) }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                actions = {
-                    if (selectedCategory == null) {
-                        IconButton(onClick = { viewModel.fetchData() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                        }
-                    }
-                }
-            )
+                )
+            }
         },
         bottomBar = {
             if (selectedCategory == null) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = SurfaceWhite,
+                    tonalElevation = 8.dp
+                ) {
                     NavigationBarItem(
                         selected = activeTab == 0,
                         onClick = { viewModel.setActiveTab(0) },
                         icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-                        label = { Text("Dashboard") }
+                        label = { Text("Dashboard") },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryBlue,
+                            selectedTextColor = PrimaryBlue,
+                            indicatorColor = PrimaryBlue.copy(alpha = 0.15f),
+                            unselectedIconColor = TextMuted,
+                            unselectedTextColor = TextMuted
+                        )
                     )
                     NavigationBarItem(
                         selected = activeTab == 1,
                         onClick = { viewModel.setActiveTab(1) },
                         icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null) },
-                        label = { Text("Mata Pajak") }
+                        label = { Text("Mata Pajak") },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryBlue,
+                            selectedTextColor = PrimaryBlue,
+                            indicatorColor = PrimaryBlue.copy(alpha = 0.15f),
+                            unselectedIconColor = TextMuted,
+                            unselectedTextColor = TextMuted
+                        )
                     )
                     NavigationBarItem(
                         selected = activeTab == 2,
                         onClick = { viewModel.setActiveTab(2) },
                         icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
-                        label = { Text("Analitik") }
+                        label = { Text("Analitik") },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryBlue,
+                            selectedTextColor = PrimaryBlue,
+                            indicatorColor = PrimaryBlue.copy(alpha = 0.15f),
+                            unselectedIconColor = TextMuted,
+                            unselectedTextColor = TextMuted
+                        )
                     )
                 }
             }
@@ -234,26 +276,50 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         if (isLoading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                color = AccentGold,
+                trackColor = PrimaryBlue.copy(alpha = 0.2f)
+            )
         }
         
         analyticError?.let { error ->
             ErrorCard(message = error) {
-                viewModel.setActiveTab(1) // Just to trigger refresh feel if needed, though buttons do it
+                viewModel.setActiveTab(1)
             }
         }
 
-        // Category Selector
+        // Category Selector Card with Gradient Border & Header
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = PrimaryBlue.copy(alpha = 0.2f)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text("Filter Kategori", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .border(1.dp, PrimaryBlue.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                    .padding(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(PrimaryBlue.copy(alpha = 0.12f), RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.FilterList, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(18.dp))
+                    }
+                    Text("Filter Kategori Analitik", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextDark)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -261,18 +327,19 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
                 ) {
                     var expanded by remember { mutableStateOf(false) }
                     Box(modifier = Modifier.weight(1f)) {
-                        OutlinedButton(
+                        Button(
                             onClick = { expanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedCategory ?: "Total", style = MaterialTheme.typography.bodyMedium)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                Text(selectedCategory ?: "Total (Semua Pajak)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.White)
                             }
                         }
                         DropdownMenu(
@@ -282,7 +349,7 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
                         ) {
                             categories.forEach { category ->
                                 DropdownMenuItem(
-                                    text = { Text(category) },
+                                    text = { Text(category, fontWeight = if ((selectedCategory ?: "Total") == category) FontWeight.Bold else FontWeight.Normal) },
                                     onClick = {
                                         viewModel.selectAnalyticCategory(if (category == "Total") null else category)
                                         expanded = false
@@ -295,86 +362,180 @@ fun AnalyticScreen(viewModel: PajakViewModel) {
             }
         }
 
-        // Daily Trend Section
-        Text("Tren Harian (${selectedCategory ?: "Total Realisasi"})", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+        // Daily Trend Section Header
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color(0xFF4A148C).copy(alpha = 0.25f)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
         ) {
-            // Month Selector
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Text("Bulan: ", style = MaterialTheme.typography.bodySmall)
-                var monthExpanded by remember { mutableStateOf(false) }
-                Box {
-                    TextButton(onClick = { monthExpanded = true }, contentPadding = PaddingValues(0.dp)) {
-                        Text(months[selectedMonth], style = MaterialTheme.typography.bodyMedium)
-                    }
-                    DropdownMenu(expanded = monthExpanded, onDismissRequest = { monthExpanded = false }) {
-                        months.forEachIndexed { index, month ->
-                            DropdownMenuItem(
-                                text = { Text(month) },
-                                onClick = {
-                                    viewModel.selectTrendMonth(index)
-                                    monthExpanded = false
-                                }
-                            )
+            Column(
+                modifier = Modifier
+                    .border(1.dp, Color(0xFF7B1FA2).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .background(Brush.horizontalGradient(listOf(Color(0xFF4A148C), Color(0xFF7B1FA2))), RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.BarChart, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        }
+                        Column {
+                            Text("Tren Harian", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextDark)
+                            Text(selectedCategory ?: "Total Realisasi", style = MaterialTheme.typography.bodySmall, color = TextMuted)
                         }
                     }
-                }
-            }
 
-            // Year Selector for Daily Trend
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Text("Tahun: ", style = MaterialTheme.typography.bodySmall)
-                var yearExpanded by remember { mutableStateOf(false) }
-                Box {
-                    TextButton(onClick = { yearExpanded = true }, contentPadding = PaddingValues(0.dp)) {
-                        Text(selectedYear.toString(), style = MaterialTheme.typography.bodyMedium)
-                    }
-                    DropdownMenu(expanded = yearExpanded, onDismissRequest = { yearExpanded = false }) {
-                        years.forEach { year ->
-                            DropdownMenuItem(
-                                text = { Text(year) },
-                                onClick = {
-                                    viewModel.selectTrendYear(year.toInt())
-                                    yearExpanded = false
+                    // Month & Year Filter Badges
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        // Month Selector
+                        var monthExpanded by remember { mutableStateOf(false) }
+                        Box {
+                            Surface(
+                                color = Color(0xFFF3E5F5),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.clickable { monthExpanded = true }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(months[selectedMonth], style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF6A1B9A))
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF6A1B9A))
                                 }
-                            )
+                            }
+                            DropdownMenu(expanded = monthExpanded, onDismissRequest = { monthExpanded = false }) {
+                                months.forEachIndexed { index, month ->
+                                    DropdownMenuItem(
+                                        text = { Text(month) },
+                                        onClick = {
+                                            viewModel.selectTrendMonth(index)
+                                            monthExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Year Selector for Daily Trend
+                        var yearExpanded by remember { mutableStateOf(false) }
+                        Box {
+                            Surface(
+                                color = Color(0xFFF3E5F5),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.clickable { yearExpanded = true }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(selectedYear.toString(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF6A1B9A))
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF6A1B9A))
+                                }
+                            }
+                            DropdownMenu(expanded = yearExpanded, onDismissRequest = { yearExpanded = false }) {
+                                years.forEach { year ->
+                                    DropdownMenuItem(
+                                        text = { Text(year) },
+                                        onClick = {
+                                            viewModel.selectTrendYear(year.toInt())
+                                            yearExpanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
+
+                TrendChart(data = dailyTrend, labelPrefix = "Tgl ", barColor = Color(0xFF7B1FA2))
             }
         }
-        TrendChart(data = dailyTrend, labelPrefix = "Tgl ")
-
-        HorizontalDivider()
 
         // Monthly Trend Section
-        Text("Tren Bulanan ${selectedCategory ?: "Total"} Tahun $selectedYear", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Pilih Tahun: ", style = MaterialTheme.typography.bodyMedium)
-            var expanded by remember { mutableStateOf(false) }
-            Box {
-                TextButton(onClick = { expanded = true }) {
-                    Text(selectedYear.toString())
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    years.forEach { year ->
-                        DropdownMenuItem(
-                            text = { Text(year) },
-                            onClick = {
-                                viewModel.selectTrendYear(year.toInt())
-                                expanded = false
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color(0xFFE65100).copy(alpha = 0.25f)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
+        ) {
+            Column(
+                modifier = Modifier
+                    .border(1.dp, Color(0xFFE65100).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .background(Brush.horizontalGradient(listOf(Color(0xFFBF360C), Color(0xFFE65100))), RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        }
+                        Column {
+                            Text("Tren Bulanan", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextDark)
+                            Text("Tahun $selectedYear (${selectedCategory ?: "Total"})", style = MaterialTheme.typography.bodySmall, color = TextMuted)
+                        }
+                    }
+
+                    var expanded by remember { mutableStateOf(false) }
+                    Box {
+                        Surface(
+                            color = Color(0xFFFFF3E0),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.clickable { expanded = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedYear.toString(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFE65100))
                             }
-                        )
+                        }
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            years.forEach { year ->
+                                DropdownMenuItem(
+                                    text = { Text(year) },
+                                    onClick = {
+                                        viewModel.selectTrendYear(year.toInt())
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
+
+                TrendChart(data = monthlyTrend, isMonthly = true, chartType = ChartType.LINE, barColor = Color(0xFFE65100))
             }
         }
-        TrendChart(data = monthlyTrend, isMonthly = true, chartType = ChartType.LINE, barColor = Color(0xFFFA8072))
         
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -604,41 +765,58 @@ fun DateSelectionBar(
     onYearClick: () -> Unit,
     onCustomRangeClick: () -> Unit
 ) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        color = SurfaceWhite,
+        shape = RoundedCornerShape(14.dp),
+        shadowElevation = 2.dp
     ) {
-        Button(
-            onClick = onTodayClick,
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text("Hari Ini", style = MaterialTheme.typography.labelSmall)
-        }
-        Button(
-            onClick = onMonthClick,
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 4.dp)
-        ) {
-            Text("Bulan Ini", style = MaterialTheme.typography.labelSmall)
-        }
-        Button(
-            onClick = onYearClick,
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 4.dp)
-        ) {
-            Text("Tahun Ini", style = MaterialTheme.typography.labelSmall)
-        }
-        OutlinedButton(
-            onClick = onCustomRangeClick,
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 4.dp)
-        ) {
-            Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Range", style = MaterialTheme.typography.labelSmall)
+            Button(
+                onClick = onTodayClick,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Text("Hari Ini", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+            Button(
+                onClick = onMonthClick,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryDarkBlue),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Text("Bulan Ini", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+            Button(
+                onClick = onYearClick,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentTeal),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Text("Tahun Ini", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+            OutlinedButton(
+                onClick = onCustomRangeClick,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.5f)),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+            ) {
+                Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(14.dp), tint = PrimaryBlue)
+                Spacer(modifier = Modifier.width(3.dp))
+                Text("Range", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+            }
         }
     }
 }
@@ -646,12 +824,12 @@ fun DateSelectionBar(
 @Composable
 fun PajakContent(data: PajakData, onCategoryClick: (String) -> Unit) {
     val items = listOf(
-        PajakItem("PKB", data.targetPkb, data.pkb?.toString(), Icons.Default.DirectionsCar, Color(0xFFE3F2FD)), // Blue
-        PajakItem("BBNKB", data.targetBbnkb, data.bbnkb?.toString(), Icons.Default.SyncAlt, Color(0xFFE8F5E9)), // Green
-        PajakItem("PAP", data.targetAp, data.ap?.toString(), Icons.Default.WaterDrop, Color(0xFFE0F7FA)), // Cyan
-        PajakItem("PBBKB", data.targetPbbkb, data.pbbkb, Icons.Default.LocalGasStation, Color(0xFFFFF8E1)), // Amber
-        PajakItem("Pajak Rokok", data.targetPajakRokok, data.pajakRokok, Icons.Default.SmokingRooms, Color(0xFFFFEBEE)), // Red
-        PajakItem("AB", data.targetAb, data.ab?.toString(), Icons.Default.Waves, Color(0xFFF3E5F5)) // Purple
+        PajakItem("PKB", data.targetPkb, data.pkb?.toString(), Icons.Default.DirectionsCar, PkbLight, PkbColor, PkbGradient),
+        PajakItem("BBNKB", data.targetBbnkb, data.bbnkb?.toString(), Icons.Default.SyncAlt, BbnkbLight, BbnkbColor, BbnkbGradient),
+        PajakItem("PAP", data.targetAp, data.ap?.toString(), Icons.Default.WaterDrop, PapLight, PapColor, PapGradient),
+        PajakItem("PBBKB", data.targetPbbkb, data.pbbkb, Icons.Default.LocalGasStation, PbbkbLight, PbbkbColor, PbbkbGradient),
+        PajakItem("Pajak Rokok", data.targetPajakRokok, data.pajakRokok, Icons.Default.SmokingRooms, RokokLight, RokokColor, RokokGradient),
+        PajakItem("AB", data.targetAb, data.ab?.toString(), Icons.Default.Waves, AbLight, AbColor, AbGradient)
     )
 
     var totalTarget = 0L
@@ -671,12 +849,23 @@ fun PajakContent(data: PajakData, onCategoryClick: (String) -> Unit) {
     ) {
         TotalCard(totalTarget, totalRealization)
         
-        Text(
-            text = "Rincian Mata Pajak Daerah",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(20.dp)
+                    .background(PrimaryBlue, RoundedCornerShape(2.dp))
+            )
+            Text(
+                text = "Rincian Mata Pajak Daerah",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+        }
 
         items.forEach { item ->
             PajakCard(
@@ -685,6 +874,8 @@ fun PajakContent(data: PajakData, onCategoryClick: (String) -> Unit) {
                 realization = item.realization,
                 icon = item.icon,
                 backgroundColor = item.color,
+                accentColor = item.accentColor,
+                gradient = item.gradient,
                 onClick = { onCategoryClick(item.title) }
             )
         }
@@ -790,76 +981,114 @@ fun TriwulanCard(item: TriwulanData, index: Int, thresholdText: String = "") {
         else -> Icons.Default.Filter4
     }
 
+    val (cardGradient, accentColor) = when(index) {
+        1 -> Brush.linearGradient(listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB))) to PrimaryBlue
+        2 -> Brush.linearGradient(listOf(Color(0xFFE8F5E9), Color(0xFFC8E6C9))) to Color(0xFF2E7D32)
+        3 -> Brush.linearGradient(listOf(Color(0xFFFFF3E0), Color(0xFFFFE0B2))) to Color(0xFFE65100)
+        else -> Brush.linearGradient(listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7))) to Color(0xFF7B1FA2)
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = accentColor.copy(alpha = 0.25f)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .border(1.dp, accentColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                .background(cardGradient)
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(accentColor, RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.White
+                        )
+                    }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = item.label,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.ExtraBold,
+                            color = TextDark
                         )
                         Text(
                             text = getQuarterMonths(index),
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
                         )
                     }
                 }
-                Text(
-                    text = percentageText,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                Surface(
+                    color = if (percentage >= 1.0) Color(0xFF2E7D32) else accentColor,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = percentageText,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             LinearProgressIndicator(
                 progress = { percentage.coerceIn(0.0, 1.0).toFloat() },
-                modifier = Modifier.fillMaxWidth().height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = accentColor,
+                trackColor = Color.White.copy(alpha = 0.6f)
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Realisasi", style = MaterialTheme.typography.bodyMedium)
+                Text("Realisasi", style = MaterialTheme.typography.bodyMedium, color = TextMuted)
                 Text(
                     text = formatNumber(item.realization.toString()),
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
                 )
             }
 
             if (thresholdText.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = thresholdText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Medium
-                )
+                Surface(
+                    color = Color.White.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = thresholdText,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = accentColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -877,7 +1106,9 @@ data class PajakItem(
     val target: String?,
     val realization: String?,
     val icon: ImageVector,
-    val color: Color
+    val color: Color,
+    val accentColor: Color = Color(0xFF1565C0),
+    val gradient: androidx.compose.ui.graphics.Brush = androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(color, color))
 )
 
 @Composable
@@ -886,66 +1117,97 @@ fun TotalCard(target: Long, realization: Long) {
     val percentageText = String.format(Locale.getDefault(), "%.2f%%", percentage * 100)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(18.dp), spotColor = Color(0xFF0F2027).copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .background(TotalPajakGradient)
+                .padding(20.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.AccountBalanceWallet,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalanceWallet,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = Color(0xFFFFD54F)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "TOTAL PAJAK DAERAH",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Provinsi Riau",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+                Surface(
+                    color = if (percentage >= 1.0) Color(0xFF2E7D32) else Color(0xFFFF8F00),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
                     Text(
-                        text = "TOTAL PAJAK",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        text = percentageText,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
                     )
                 }
-                Text(
-                    text = percentageText,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             LinearProgressIndicator(
                 progress = { percentage.coerceIn(0.0, 1.0).toFloat() },
-                modifier = Modifier.fillMaxWidth().height(12.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp)),
+                color = Color(0xFFFFD54F),
+                trackColor = Color.White.copy(alpha = 0.25f)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Total Target", style = MaterialTheme.typography.bodyMedium)
+                Text("Total Target", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
                 Text(
                     text = formatNumber(target.toString()),
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Total Realisasi", style = MaterialTheme.typography.bodyMedium)
+                Text("Total Realisasi", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
                 Text(
                     text = formatNumber(realization.toString()),
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFFD54F)
                 )
             }
         }
@@ -953,7 +1215,16 @@ fun TotalCard(target: Long, realization: Long) {
 }
 
 @Composable
-fun PajakCard(title: String, target: String?, realization: String?, icon: ImageVector, backgroundColor: Color, onClick: () -> Unit) {
+fun PajakCard(
+    title: String,
+    target: String?,
+    realization: String?,
+    icon: ImageVector,
+    backgroundColor: Color,
+    accentColor: Color = Color(0xFF1565C0),
+    gradient: androidx.compose.ui.graphics.Brush = androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(backgroundColor, backgroundColor)),
+    onClick: () -> Unit
+) {
     val targetVal = target?.toLongOrNull() ?: 0L
     val realizationVal = realization?.toLongOrNull() ?: 0L
     val percentage = if (targetVal > 0) (realizationVal.toDouble() / targetVal.toDouble()) else 0.0
@@ -961,67 +1232,91 @@ fun PajakCard(title: String, target: String?, realization: String?, icon: ImageV
     val percentageText = String.format(Locale.getDefault(), "%.2f%%", percentage100)
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = accentColor.copy(alpha = 0.25f))
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .border(1.dp, accentColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                .padding(16.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .background(gradient, RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
                     )
                 }
-                Text(
-                    text = percentageText,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (percentage >= 1.0) MaterialTheme.colorScheme.primary else Color.DarkGray,
-                    fontWeight = FontWeight.Bold
-                )
+                Surface(
+                    color = if (percentage >= 1.0) Color(0xFF2E7D32) else accentColor.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = percentageText,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (percentage >= 1.0) Color.White else accentColor,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             LinearProgressIndicator(
                 progress = { percentage.coerceIn(0.0, 1.0).toFloat() },
-                modifier = Modifier.fillMaxWidth().height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.LightGray.copy(alpha = 0.5f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = accentColor,
+                trackColor = backgroundColor.copy(alpha = 0.8f)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Target", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                Text("Target", style = MaterialTheme.typography.bodySmall, color = TextMuted)
                 Text(
                     text = formatNumber(target),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextDark
                 )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Realisasi", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                Text("Realisasi", style = MaterialTheme.typography.bodySmall, color = TextMuted)
                 Text(
                     text = formatNumber(realization),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor
                 )
             }
 
@@ -1030,11 +1325,11 @@ fun PajakCard(title: String, target: String?, realization: String?, icon: ImageV
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
                     color = if (isAchieved) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                    shape = MaterialTheme.shapes.small,
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
