@@ -10,6 +10,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -74,12 +77,13 @@ fun PajakScreen(
                         Text(
                             text = when {
                                 selectedCategory != null -> "Rincian $selectedCategory"
-                                activeTab == 1 -> "Dashboard Analitik"
-                                else -> "Realisasi Penerimaan Daerah"
+                                activeTab == 0 -> "Dashboard KPI Realisasi"
+                                activeTab == 1 -> "Realisasi Penerimaan Daerah"
+                                else -> "Dashboard Analitik"
                             },
                             style = MaterialTheme.typography.titleMedium
                         )
-                        if (selectedCategory == null && activeTab == 0) {
+                        if (selectedCategory == null) {
                             Text(
                                 text = "$startDate s/d $endDate",
                                 style = MaterialTheme.typography.bodySmall,
@@ -100,7 +104,7 @@ fun PajakScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
-                    if (selectedCategory == null && activeTab == 0) {
+                    if (selectedCategory == null) {
                         IconButton(onClick = { viewModel.fetchData() }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                         }
@@ -114,12 +118,18 @@ fun PajakScreen(
                     NavigationBarItem(
                         selected = activeTab == 0,
                         onClick = { viewModel.setActiveTab(0) },
-                        icon = { Icon(Icons.Default.List, contentDescription = null) },
-                        label = { Text("Beranda") }
+                        icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
+                        label = { Text("Dashboard") }
                     )
                     NavigationBarItem(
                         selected = activeTab == 1,
                         onClick = { viewModel.setActiveTab(1) },
+                        icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null) },
+                        label = { Text("Mata Pajak") }
+                    )
+                    NavigationBarItem(
+                        selected = activeTab == 2,
+                        onClick = { viewModel.setActiveTab(2) },
                         icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
                         label = { Text("Analitik") }
                     )
@@ -128,60 +138,75 @@ fun PajakScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (activeTab == 0) {
-                AnimatedVisibility(
-                    visible = selectedCategory == null,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    DateSelectionBar(
-                        onTodayClick = {
-                            val today = viewModel.getTodayDate()
-                            viewModel.setDateRangeAndFetch(today, today)
-                        },
-                        onMonthClick = {
-                    val start = viewModel.getStartOfMonthDate()
-                    val today = viewModel.getTodayDate()
-                    viewModel.setDateRangeAndFetch(start, today)
-                },
-                onYearClick = {
-                    val start = viewModel.getStartOfYearDate()
-                    val end = viewModel.getEndOfYearDate()
-                    viewModel.setDateRangeAndFetch(start, end)
-                },
-                onCustomRangeClick = {
-                            showDatePicker(startDate) { newStart ->
-                                showDatePicker(endDate) { newEnd ->
-                                    viewModel.setDateRangeAndFetch(newStart, newEnd)
-                                }
-                            }
-                        }
-                    )
-                }
-
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    if (selectedCategory != null) {
-                        if (isDetailLoading) {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                        } else {
-                            TriwulanDetailContent(selectedCategory!!, triwulanData)
-                        }
-                    } else {
-                        when (val state = uiState) {
-                            is PajakUiState.Loading -> {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                            }
-                            is PajakUiState.Success -> {
-                                PajakContent(state.data, onCategoryClick = { viewModel.selectCategory(it) })
-                            }
-                            is PajakUiState.Error -> {
-                                ErrorState(state.message) { viewModel.fetchData() }
+            AnimatedVisibility(
+                visible = selectedCategory == null && (activeTab == 0 || activeTab == 1),
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                DateSelectionBar(
+                    onTodayClick = {
+                        val today = viewModel.getTodayDate()
+                        viewModel.setDateRangeAndFetch(today, today)
+                    },
+                    onMonthClick = {
+                        val start = viewModel.getStartOfMonthDate()
+                        val today = viewModel.getTodayDate()
+                        viewModel.setDateRangeAndFetch(start, today)
+                    },
+                    onYearClick = {
+                        val start = viewModel.getStartOfYearDate()
+                        val end = viewModel.getEndOfYearDate()
+                        viewModel.setDateRangeAndFetch(start, end)
+                    },
+                    onCustomRangeClick = {
+                        showDatePicker(startDate) { newStart ->
+                            showDatePicker(endDate) { newEnd ->
+                                viewModel.setDateRangeAndFetch(newStart, newEnd)
                             }
                         }
                     }
+                )
+            }
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when (activeTab) {
+                    0 -> {
+                        DashboardLandingScreen(
+                            viewModel = viewModel,
+                            onNavigateToDetails = { category ->
+                                viewModel.selectCategory(category)
+                                viewModel.setActiveTab(1)
+                            },
+                            onNavigateToAnalytics = {
+                                viewModel.setActiveTab(2)
+                            }
+                        )
+                    }
+                    1 -> {
+                        if (selectedCategory != null) {
+                            if (isDetailLoading) {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            } else {
+                                TriwulanDetailContent(selectedCategory!!, triwulanData)
+                            }
+                        } else {
+                            when (val state = uiState) {
+                                is PajakUiState.Loading -> {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                }
+                                is PajakUiState.Success -> {
+                                    PajakContent(state.data, onCategoryClick = { viewModel.selectCategory(it) })
+                                }
+                                is PajakUiState.Error -> {
+                                    ErrorState(state.message) { viewModel.fetchData() }
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        AnalyticScreen(viewModel)
+                    }
                 }
-            } else {
-                AnalyticScreen(viewModel)
             }
         }
     }
@@ -642,11 +667,16 @@ fun PajakContent(data: PajakData, onCategoryClick: (String) -> Unit) {
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         TotalCard(totalTarget, totalRealization)
         
-        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+        Text(
+            text = "Rincian Mata Pajak Daerah",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
 
         items.forEach { item ->
             PajakCard(
