@@ -4,16 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.infopajak.data.PajakData
 import com.example.infopajak.data.PajakRequest
+import com.example.infopajak.data.PajakResponse
 import com.example.infopajak.network.PajakApiService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 sealed class PajakUiState {
     object Loading : PajakUiState()
@@ -81,9 +84,19 @@ class PajakViewModel : ViewModel() {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
+    private val okHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+    }
+
     private val apiService: PajakApiService by lazy {
         Retrofit.Builder()
             .baseUrl("https://apps1.bapenda.riau.go.id/")
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(PajakApiService::class.java)
@@ -129,7 +142,32 @@ class PajakViewModel : ViewModel() {
         fetchMonthlyTrend(_selectedTrendYear.value)
     }
 
-    private fun getApiKeyForYear(year: Int): String = "bpd${year}av2#"
+    private fun getApiKeyForYear(year: Int): String {
+        return if (year < 2026) {
+            "bpd2026av2#"
+        } else {
+            "bpd${year}av2#"
+        }
+    }
+
+    private suspend fun requestPajakSafe(apiKey: String, start: String, end: String): PajakResponse {
+        return try {
+            val response = apiService.getPajakData(PajakRequest(apiKey, start, end))
+            if (response.status == 200 && response.data != null) {
+                response
+            } else if (apiKey != "bpd2026av2#") {
+                apiService.getPajakData(PajakRequest("bpd2026av2#", start, end))
+            } else {
+                response
+            }
+        } catch (e: Exception) {
+            if (apiKey != "bpd2026av2#") {
+                apiService.getPajakData(PajakRequest("bpd2026av2#", start, end))
+            } else {
+                throw e
+            }
+        }
+    }
 
     private var fetchDailyTrendJob: Job? = null
     private var fetchMonthlyTrendJob: Job? = null
@@ -151,8 +189,7 @@ class PajakViewModel : ViewModel() {
                     async {
                         try {
                             val dateStr = String.format(Locale.getDefault(), "%d-%02d-%02d", year, month + 1, day)
-                            val request = PajakRequest(getApiKeyForYear(year), dateStr, dateStr)
-                            val response = apiService.getPajakData(request)
+                            val response = requestPajakSafe(getApiKeyForYear(year), dateStr, dateStr)
                             val total = when (_selectedAnalyticCategory.value) {
                                 "PKB" -> response.data?.pkb ?: 0L
                                 "BBNKB" -> response.data?.bbnkb ?: 0L
@@ -209,8 +246,7 @@ class PajakViewModel : ViewModel() {
                             val start = String.format(Locale.getDefault(), "%d-%02d-01", year, monthIdx + 1)
                             val end = String.format(Locale.getDefault(), "%d-%02d-%02d", year, monthIdx + 1, lastDay)
                             
-                            val request = PajakRequest(getApiKeyForYear(year), start, end)
-                            val response = apiService.getPajakData(request)
+                            val response = requestPajakSafe(getApiKeyForYear(year), start, end)
                             val total = when (_selectedAnalyticCategory.value) {
                                 "PKB" -> response.data?.pkb ?: 0L
                                 "BBNKB" -> response.data?.bbnkb ?: 0L
@@ -273,8 +309,7 @@ class PajakViewModel : ViewModel() {
                 val results = quarters.map { (label, start, end) ->
                     async {
                         try {
-                            val request = PajakRequest(getApiKeyForYear(yearInt), start, end)
-                            val response = apiService.getPajakData(request)
+                            val response = requestPajakSafe(getApiKeyForYear(yearInt), start, end)
                             val realization = when (category) {
                                 "PKB" -> response.data?.pkb ?: 0L
                                 "BBNKB" -> response.data?.bbnkb ?: 0L
@@ -320,12 +355,7 @@ class PajakViewModel : ViewModel() {
             _uiState.value = PajakUiState.Loading
             try {
                 val year = try { start.split("-")[0].toInt() } catch (e: Exception) { Calendar.getInstance().get(Calendar.YEAR) }
-                val request = PajakRequest(
-                    apiKey = getApiKeyForYear(year),
-                    tglAwal = start,
-                    tglAkhir = end
-                )
-                val response = apiService.getPajakData(request)
+                val response = requestPajakSafe(getApiKeyForYear(year), start, end)
                 if (response.status == 200 && response.data != null) {
                     _uiState.value = PajakUiState.Success(response.data)
                 } else {
@@ -348,6 +378,13 @@ class PajakViewModel : ViewModel() {
     fun getStartOfYearDate(): String {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_YEAR, 1)
+        return dateFormat.format(calendar.time)
+    }
+
+    fun getEndOfYearDate(): String {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER)
+        calendar.set(Calendar.DAY_OF_MONTH, 31)
         return dateFormat.format(calendar.time)
     }
 }

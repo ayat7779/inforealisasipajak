@@ -146,8 +146,8 @@ fun PajakScreen(
                 },
                 onYearClick = {
                     val start = viewModel.getStartOfYearDate()
-                    val today = viewModel.getTodayDate()
-                    viewModel.setDateRangeAndFetch(start, today)
+                    val end = viewModel.getEndOfYearDate()
+                    viewModel.setDateRangeAndFetch(start, end)
                 },
                 onCustomRangeClick = {
                             showDatePicker(startDate) { newStart ->
